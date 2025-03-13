@@ -14,12 +14,26 @@ Chatty is a Flask-based web application that connects to N8N webhooks to process
 - Easy-to-use settings configuration panel
 - Chat history with timestamp display
 - Clear chat functionality
+- Single-click launcher script (Chatty.bat) for easy startup
 
 ## System Requirements
 
 - Python 3.7 or higher
 - N8N instance with a configured webhook
 - Modern web browser (Chrome, Firefox, Edge, Safari)
+
+## Quick Start
+
+For Windows users, we provide a single-click launcher:
+
+1. Download and extract the Chatty application
+2. Double-click the `Chatty.bat` file
+3. The launcher will automatically:
+   - Check if Python is installed
+   - Set up a virtual environment
+   - Install all required dependencies
+   - Start the Flask server
+   - Open your web browser to the application
 
 ## Installation
 
@@ -30,7 +44,7 @@ git clone https://github.com/yourusername/chatty.git
 cd chatty
 ```
 
-2. Create a virtual environment and activate it:
+2. Create a virtual environment (optional if using Chatty.bat):
 
 ```bash
 python -m venv venv
@@ -38,7 +52,7 @@ venv\Scripts\activate  # On Windows
 source venv/bin/activate  # On macOS/Linux
 ```
 
-3. Install the required packages:
+3. Install the required packages (optional if using Chatty.bat):
 
 ```bash
 pip install -r requirements.txt
@@ -61,6 +75,13 @@ Chatty requires the following configuration, which can be set through the settin
 These settings are stored in the user's session and are used for all subsequent requests.
 
 ## Running the Application
+
+### Option 1: Using the Launcher (Recommended for Windows)
+
+1. Double-click the `Chatty.bat` file
+2. The application will start automatically and open in your web browser
+
+### Option 2: Manual Start
 
 1. Start the Flask development server:
 
