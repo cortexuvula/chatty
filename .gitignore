@@ -53,3 +53,8 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
+
+# Flask session files
+flask_session/
+.flask_session/
+sessions/
