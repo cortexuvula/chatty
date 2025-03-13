@@ -15,6 +15,10 @@ Chatty is a Flask-based web application that connects to N8N webhooks to process
 - Chat history with timestamp display
 - Clear chat functionality
 - Single-click launcher script (Chatty.bat) for easy startup
+- Response action buttons:
+  - Copy to clipboard - easily copy AI responses with a single click
+  - Export to PDF - save AI responses as PDF files for future reference
+  - Print - open a print-friendly version of the AI response for printing
 
 ## System Requirements
 
@@ -110,6 +114,13 @@ python app.py
    - Click the "Clear Chat" button to remove all messages except the welcome message
    - Chat history persists only in the browser and is not stored on the server
 
+4. **Working with AI Responses**:
+   - Each AI response has three action buttons in the bottom-right corner:
+     - **Print** (printer icon): Opens a print-friendly version of the response in a new window with a print button
+     - **PDF** (PDF file icon): Generates and downloads a PDF document containing the response
+     - **Copy** (clipboard icon): Copies the full text of the response to your clipboard
+   - A notification will appear when an action is completed successfully
+
 ## N8N Webhook Integration
 
 Your N8N webhook should be configured to:
@@ -146,6 +157,7 @@ Example N8N workflow:
 - **Error connecting to webhook**: Verify your webhook URL, username, and password in Settings
 - **No response from AI**: Check your N8N workflow to ensure it's processing requests correctly
 - **Import errors**: Ensure all dependencies are installed with the correct versions
+- **PDF generation issues**: Make sure your browser allows pop-ups from the application
 
 ## Dependencies
 
@@ -156,6 +168,11 @@ Chatty relies on the following key packages:
 - Flask-Session 0.4.0
 - Python-dotenv 1.0.0
 - Requests 2.31.0
+
+### Frontend Libraries:
+- Bootstrap 5.3.0
+- Bootstrap Icons 1.11.0
+- jsPDF 2.5.1 (for PDF generation)
 
 ## Security Considerations
 
