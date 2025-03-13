@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear-fill me-2"></i>Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('settings') }}">
+                    {{ form.csrf_token }}
+                    <div class="mb-3">
+                        <label for="webhook_url" class="form-label">{{ form.webhook_url.label }}</label>
+                        {{ form.webhook_url(class="form-control", placeholder="https://your-n8n-instance.com/webhook/path") }}
+                        {% if form.webhook_url.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.webhook_url.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">The URL for the N8N webhook that will process your chat queries</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">{{ form.username.label }}</label>
+                        {{ form.username(class="form-control", placeholder="Webhook authentication username") }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{{ form.password.label }}</label>
+                        {{ form.password(class="form-control", placeholder="Webhook authentication password") }}
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
