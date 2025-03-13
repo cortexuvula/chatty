@@ -112,6 +112,8 @@ def chat():
 
 @app.route('/clear_chat', methods=['POST'])
 def clear_chat():
+    # Generate a new session ID
+    session['sessionId'] = os.urandom(16).hex()
     return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
