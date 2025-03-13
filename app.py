@@ -7,6 +7,7 @@ import requests
 from flask_session import Session
 from dotenv import load_dotenv
 import json
+from datetime import timedelta
 
 # Load environment variables
 load_dotenv()
@@ -14,7 +15,8 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-for-chatty-app')
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 Session(app)
 
 # Form for settings
