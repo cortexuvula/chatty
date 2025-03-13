@@ -96,6 +96,10 @@ body {
     color: #dc3545; /* Red color for PDF */
 }
 
+.print-button:hover {
+    color: #198754; /* Green color for Print */
+}
+
 /* Notification styles */
 .notification {
     position: fixed;

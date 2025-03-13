@@ -92,6 +92,78 @@ function initChat() {
         }
     }
     
+    // Print message
+    function printResponse(text, sender) {
+        try {
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            
+            // Create content for the print window
+            const now = new Date();
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Chatty AI Response</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            max-width: 800px;
+                            margin: 0 auto;
+                            padding: 20px;
+                        }
+                        .header {
+                            border-bottom: 1px solid #ccc;
+                            padding-bottom: 10px;
+                            margin-bottom: 20px;
+                        }
+                        .content {
+                            white-space: pre-wrap;
+                        }
+                        .footer {
+                            margin-top: 30px;
+                            font-size: 0.8em;
+                            color: #666;
+                            text-align: center;
+                        }
+                        @media print {
+                            .no-print {
+                                display: none;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Chatty AI Response</h1>
+                        <p>From: ${sender}</p>
+                        <p>Generated on: ${now.toLocaleString()}</p>
+                    </div>
+                    <div class="content">${text.replace(/\n/g, '<br>')}</div>
+                    <div class="footer">Printed from Chatty AI Chat Application</div>
+                    <div class="no-print">
+                        <button onclick="window.print()" style="padding: 10px 20px; margin-top: 20px; cursor: pointer;">
+                            Print this page
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Write to the new window and trigger print
+            printWindow.document.open();
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            // Show notification
+            showNotification('Print window opened', 'success');
+        } catch (error) {
+            console.error('Could not print: ', error);
+            showNotification('Failed to open print window', 'error');
+        }
+    }
+    
     // Show notification 
     function showNotification(message, type = 'success') {
         const notification = document.createElement('div');
@@ -155,6 +227,11 @@ function initChat() {
             
             // Add action buttons for AI responses
             if (type === 'ai') {
+                // Print button
+                messageHTML += `<button class="action-button print-button" title="Print response" data-content="${encodeURIComponent(originalText)}">
+                    <i class="bi bi-printer"></i>
+                </button>`;
+                
                 // PDF export button
                 messageHTML += `<button class="action-button pdf-button" title="Export response to PDF" data-content="${encodeURIComponent(originalText)}">
                     <i class="bi bi-file-pdf"></i>
@@ -189,6 +266,15 @@ function initChat() {
                 pdfButton.addEventListener('click', function() {
                     const textToExport = decodeURIComponent(this.getAttribute('data-content'));
                     exportToPDF(textToExport, 'Chatty AI');
+                });
+            }
+            
+            // Print button event listener
+            const printButton = messageDiv.querySelector('.print-button');
+            if (printButton) {
+                printButton.addEventListener('click', function() {
+                    const textToPrint = decodeURIComponent(this.getAttribute('data-content'));
+                    printResponse(textToPrint, 'Chatty AI');
                 });
             }
         }
