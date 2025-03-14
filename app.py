@@ -33,9 +33,8 @@ def index():
         flash('Please configure your settings first', 'warning')
         return redirect(url_for('settings'))
     
-    # Create a session ID if one doesn't exist
-    if 'sessionId' not in session:
-        session['sessionId'] = os.urandom(16).hex()
+    # Always create a new session ID when application is launched
+    session['sessionId'] = os.urandom(16).hex()
         
     return render_template('index.html')
 
