@@ -52,34 +52,168 @@ function initChat() {
             // Access jsPDF from the global scope
             const { jsPDF } = window.jspdf;
             
+            // Create a temporary div to render markdown to HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            tempDiv.style.top = '-9999px';
+            document.body.appendChild(tempDiv);
+            
+            // Parse markdown to HTML
+            tempDiv.innerHTML = marked.parse(text);
+            
+            // Better text extraction - normalize HTML content to get clean text
+            // Remove extra spaces and handle character spacing issues
+            let extractedText = '';
+            
+            // Process each HTML node to extract text properly
+            function extractTextFromNode(node) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    return node.textContent;
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    let text = '';
+                    
+                    // Add line breaks before specific elements
+                    if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BR', 'TR'].includes(node.nodeName)) {
+                        text += '\n';
+                    }
+                    
+                    // Add additional line break for block elements to create paragraphs
+                    if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(node.nodeName)) {
+                        text += '\n';
+                    }
+                    
+                    // Recursively process child nodes
+                    for (const childNode of node.childNodes) {
+                        text += extractTextFromNode(childNode);
+                    }
+                    
+                    // Add line break after certain elements
+                    if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BR', 'TR'].includes(node.nodeName)) {
+                        text += '\n';
+                    }
+                    
+                    return text;
+                }
+                return '';
+            }
+            
+            // Extract text from the HTML
+            extractedText = extractTextFromNode(tempDiv);
+            
+            // Clean up the extracted text
+            extractedText = extractedText
+                .replace(/\n{3,}/g, '\n\n')  // Replace 3+ consecutive newlines with just 2
+                .replace(/\s+/g, ' ')        // Normalize spaces (replace multiple spaces with a single space)
+                .replace(/ \n/g, '\n')       // Remove space before newline
+                .replace(/\n /g, '\n')       // Remove space after newline
+                .trim();
+                
+            // Split by double line breaks to get paragraphs
+            const paragraphs = extractedText.split('\n\n');
+            
+            // Remove the temp div from the document
+            document.body.removeChild(tempDiv);
+            
             // Create a new PDF document
-            const doc = new jsPDF();
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+                compress: true
+            });
             
             // Set title and metadata
             const title = 'Chatty AI Response';
             doc.setProperties({
                 title: title,
                 author: 'Chatty',
-                creator: 'Chatty AI Chat Application'
+                creator: 'Chatty AI Chat Application',
+                subject: 'AI Response',
+                keywords: 'Chatty, AI, Response'
             });
             
-            // Add title
-            doc.setFontSize(16);
-            doc.text(title, 20, 20);
+            // Set font size and line spacing
+            const lineHeight = 7; // Increased for better readability
             
-            // Add timestamp
+            // Set margins with more space
+            const margin = 25; 
+            const pageWidth = doc.internal.pageSize.width;
+            const maxWidth = pageWidth - (2 * margin);
+            
+            // Add header
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.text(title, margin, margin);
+            
+            // Add metadata
             doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
             const now = new Date();
-            doc.text(`Generated on: ${now.toLocaleString()}`, 20, 30);
+            doc.text(`From: ${sender}`, margin, margin + lineHeight);
+            doc.text(`Generated on: ${now.toLocaleString()}`, margin, margin + 2 * lineHeight);
             
-            // Add sender info
-            doc.setFontSize(12);
-            doc.text(`From: ${sender}`, 20, 40);
+            // Add a separator line
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, margin + 3 * lineHeight, pageWidth - margin, margin + 3 * lineHeight);
             
-            // Format and add main content with proper wrapping
-            doc.setFontSize(12);
-            const textLines = doc.splitTextToSize(text, 170); // Width: 170
-            doc.text(textLines, 20, 50);
+            // Process the content
+            let startY = margin + 4 * lineHeight;
+            
+            // Process paragraphs
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(11);
+            
+            paragraphs.forEach(paragraph => {
+                if (paragraph.trim() === '') return; // Skip empty paragraphs
+                
+                // Check if paragraph appears to be a heading by looking at its length and content
+                if (paragraph.length < 50 && 
+                    (paragraph.toUpperCase() === paragraph || 
+                    paragraph.split(':').length > 1 && paragraph.split(':')[0].length < 25)) {
+                    // It's likely a heading or label
+                    doc.setFont('helvetica', 'bold');
+                    
+                    // Use a slightly larger font for headings
+                    if (paragraph.length < 20) {
+                        doc.setFontSize(12);
+                    } else {
+                        doc.setFontSize(11);
+                    }
+                } else {
+                    // Regular paragraph
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(11);
+                }
+                
+                // Split the paragraph text to fit the width
+                const lines = doc.splitTextToSize(paragraph, maxWidth);
+                
+                // Check if we need a new page
+                if (startY + (lines.length * lineHeight) > doc.internal.pageSize.height - margin) {
+                    doc.addPage();
+                    startY = margin;
+                }
+                
+                // Add the text
+                doc.text(lines, margin, startY);
+                
+                // Update the Y position
+                startY += lines.length * lineHeight + 2; // Add extra space between paragraphs
+            });
+            
+            // Add a footer with page numbers
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(9);
+                doc.setTextColor(100, 100, 100);
+                doc.text(
+                    `Page ${i} of ${totalPages} - Chatty AI Chat Application`,
+                    margin,
+                    doc.internal.pageSize.height - 10
+                );
+            }
             
             // Save the PDF
             doc.save('chatty-response.pdf');
@@ -121,6 +255,17 @@ function initChat() {
                         .content {
                             white-space: pre-wrap;
                         }
+                        pre {
+                            background-color: #f5f5f5;
+                            padding: 10px;
+                            border-radius: 4px;
+                            overflow-x: auto;
+                        }
+                        code {
+                            background-color: #f5f5f5;
+                            padding: 2px 4px;
+                            border-radius: 3px;
+                        }
                         .footer {
                             margin-top: 30px;
                             font-size: 0.8em;
@@ -133,6 +278,7 @@ function initChat() {
                             }
                         }
                     </style>
+                    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
                 </head>
                 <body>
                     <div class="header">
@@ -140,13 +286,17 @@ function initChat() {
                         <p>From: ${sender}</p>
                         <p>Generated on: ${now.toLocaleString()}</p>
                     </div>
-                    <div class="content">${text.replace(/\n/g, '<br>')}</div>
+                    <div class="content" id="markdown-content"></div>
                     <div class="footer">Printed from Chatty AI Chat Application</div>
                     <div class="no-print">
                         <button onclick="window.print()" style="padding: 10px 20px; margin-top: 20px; cursor: pointer;">
                             Print this page
                         </button>
                     </div>
+                    <script>
+                        // Render markdown after page loads
+                        document.getElementById('markdown-content').innerHTML = marked.parse(${JSON.stringify(text)});
+                    </script>
                 </body>
                 </html>
             `;
@@ -200,20 +350,14 @@ function initChat() {
             originalText = content.text;
         }
         
-        // Handle markdown-like formatting for code blocks and links
+        // Handle markdown formatting
         if (typeof content === 'string') {
-            // Simple code block handling
-            content = content.replace(/```(.+?)```/gs, '<pre><code>$1</code></pre>');
-            // Inline code
-            content = content.replace(/`(.+?)`/g, '<code>$1</code>');
-            // Simple link handling
-            content = content.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>');
-            // Line breaks
-            content = content.split('\n').map(line => `<p>${line}</p>`).join('');
+            // Use marked.js for markdown parsing
+            content = marked.parse(content);
         } else if (typeof content === 'object') {
             // Handle structured response object from RAG
             if (content.text) {
-                content = content.text.split('\n').map(line => `<p>${line}</p>`).join('');
+                content = marked.parse(content.text);
             } else {
                 content = '<p>Received a response but couldn\'t parse it properly.</p>';
             }
